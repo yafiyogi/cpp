@@ -43,6 +43,7 @@ template<typename C, typename R, typename... Args>
 struct yy_func_traits<R(C::*)(Args...)>
 {
     using result_type = R;
+    using class_type = C;
     using tuple_type = std::tuple<Args...>;
     static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
 
@@ -57,6 +58,7 @@ template<typename C, typename R, typename... Args>
 struct yy_func_traits<R(C::*)(Args...) const>
 {
     using result_type = R;
+    using class_type = C;
     using tuple_type = std::tuple<Args...>;
     static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
 
@@ -71,6 +73,7 @@ template<typename C, typename... Args>
 struct yy_func_traits<void(C::*)(Args...)>
 {
     using result_type = void;
+    using class_type = C;
     using tuple_type = std::tuple<Args...>;
     static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
 
@@ -85,6 +88,7 @@ template<typename C, typename... Args>
 struct yy_func_traits<void(C::*)(Args...) const>
 {
     using result_type = void;
+    using class_type = C;
     using tuple_type = std::tuple<Args...>;
     static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
 
