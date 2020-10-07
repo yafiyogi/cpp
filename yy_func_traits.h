@@ -24,6 +24,10 @@ SOFTWARE.
 
 */
 
+#include <climits>
+#include <cstddef>
+#include <tuple>
+
 #ifndef yy_func_traits_h
 # define yy_func_traits_h
 
@@ -31,19 +35,49 @@ namespace yafiyogi {
 
 template<typename T>
 struct yy_func_traits:
-            public yy_func_traits<decltype(&T::operator())>
+    public yy_func_traits<decltype(&T::operator())>
 {
+};
+
+template<typename C, typename R, typename... Args>
+struct yy_func_traits<R(C::*)(Args...)>
+{
+    using result_type = R;
+    using tuple_type = std::tuple<Args...>;
+    static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
+
+    template<std::size_t N>
+    struct arg
+    {
+        using type = typename std::tuple_element<N, tuple_type>::type;
+    };
 };
 
 template<typename C, typename R, typename... Args>
 struct yy_func_traits<R(C::*)(Args...) const>
 {
     using result_type = R;
+    using tuple_type = std::tuple<Args...>;
+    static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
 
-    template<size_t N>
+    template<std::size_t N>
     struct arg
     {
-        using type = typename std::tuple_element<N, std::tuple<Args...>>::type;
+        using type = typename std::tuple_element<N, tuple_type>::type;
+    };
+};
+
+template<typename C, typename... Args>
+struct yy_func_traits<void(C::*)(Args...)>
+{
+    using result_type = void;
+    using tuple_type = std::tuple<Args...>;
+    static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
+
+    template<std::size_t N>
+    struct arg
+    {
+        using type = typename std::tuple_element<N, tuple_type>::type;
     };
 };
 
@@ -51,11 +85,13 @@ template<typename C, typename... Args>
 struct yy_func_traits<void(C::*)(Args...) const>
 {
     using result_type = void;
+    using tuple_type = std::tuple<Args...>;
+    static constexpr std::size_t num_args = std::tuple_size<tuple_type>::value;
 
-    template<size_t N>
+    template<std::size_t N>
     struct arg
     {
-        using type = typename std::tuple_element<N, std::tuple<Args...>>::type;
+        using type = typename std::tuple_element<N, tuple_type>::type;
     };
 };
 
