@@ -60,8 +60,8 @@ struct trie_node_traits
   using node_key_type = yy_container_type_t<key_type>;
   using node_type = trie_node<key_type, PayloadType>;
   using node_ptr = std::shared_ptr<node_type>;
-  using node_queue = std::deque<node_ptr>;
   using node_shim = trie_node_shim<key_type, PayloadType>;
+  using node_queue = std::deque<node_shim>;
   using payload_type = PayloadType;
 };
 
@@ -97,20 +97,16 @@ public:
   using node_key_type = typename traits::node_key_type;
   using node_ptr = typename traits::node_ptr;
   using payload_type = typename traits::payload_type;
-  using node_shim = trie_node_shim<key_type, payload_type>;
+  using node_shim = typename traits::node_shim;
 
   trie_node() = delete;
   trie_node(const trie_node & node) = delete;
   trie_node(trie_node && node) = delete;
   virtual ~trie_node() = default;
 
-  trie_node(node_key_type key,
-            node_ptr fail):
-    m_key( std::move(key)),
-    m_fail( std::move(fail)),
-    m_id( ++id)
+  trie_node(node_ptr fail):
+    m_fail( std::move(fail))
   {
-
   }
 
   node_ptr add( node_key_type key, const node_ptr & fail)
@@ -122,28 +118,28 @@ public:
       return iter->node;
     }
 
-    auto node = std::make_shared<trie_node>( key, fail);
+    auto node = std::make_shared<trie_node>( fail);
 
     m_children.emplace( iter, node_shim{std::move(key), node});
 
     return node;
   }
 
-  void add( node_ptr child)
+  void add( node_shim child)
   {
-    auto & key = child->key();
+    auto & key = child.key;
     auto [iter, found] = Find( m_children, key, comp);
 
     if(!found)
     {
-      m_children.emplace( iter, node_shim{key, std::move(child)});
+      m_children.emplace( iter, std::move(child));
     }
     else
     {
-      auto && node = iter->node;
-      std::swap( node->m_fail, child->m_fail);
-      std::swap( node->m_children, child->m_children);
-      node = child;
+      auto && shim = *iter;
+      std::swap( shim.node->m_fail, child.node->m_fail);
+      std::swap( shim.node->m_children, child.node->m_children);
+      shim = child;
     }
   }
 
@@ -194,13 +190,8 @@ public:
   {
     for( auto && child: m_children)
     {
-      visitor.visit(child.node);
+      visitor.visit(child);
     }
-  }
-
-  const node_key_type & key() const
-  {
-    return m_key;
   }
 
   virtual bool empty() const
@@ -218,18 +209,14 @@ public:
     throw std::runtime_error("Invalid value");
   }
 
-  int m_id;
-
 private:
   static bool comp(const node_shim & shim,
                    const node_key_type & value)
   {
     return value < shim.key;
   };
-  node_key_type m_key;
   node_ptr m_fail;
   std::vector<node_shim> m_children;
-  static inline int id = 0;
 };
 
 template<typename K,
@@ -240,13 +227,14 @@ public:
   using traits = trie_node_traits<K, PayloadType>;
   using node_ptr = typename traits::node_ptr;
   using node_queue = typename traits::node_queue;
+  using node_shim = typename traits::node_shim;
 
   add_children_visitor(node_queue * queue):
     m_queue(queue)
   {
   }
 
-  void visit(node_ptr & child)
+  void visit(node_shim & child)
   {
     m_queue->emplace_back(child);
   }
@@ -263,6 +251,7 @@ public:
   using traits = trie_node_traits<K, PayloadType>;
   using node_ptr = typename traits::node_ptr;
   using node_queue = typename traits::node_queue;
+  using node_shim = typename traits::node_shim;
 
   compile_visitor(node_queue * queue,
                   node_ptr fail,
@@ -273,7 +262,7 @@ public:
   {
   }
 
-  void visit(node_ptr & child)
+  void visit(node_shim & child)
   {
     m_queue->emplace_back(child);
 
@@ -282,7 +271,7 @@ public:
 
     while(fail == m_root)
     {
-      fail = state->get(child->key(), m_root);
+      fail = state->get(child.key, m_root);
       state = state->fail();
 
       if( state == m_root)
@@ -291,7 +280,7 @@ public:
       }
     }
 
-    child->fail(fail);
+    child.node->fail(fail);
   }
 
 private:
@@ -313,6 +302,7 @@ public:
   using node_type = typename traits::node_type;
   using node_ptr = typename traits::node_ptr;
   using node_queue = typename traits::node_queue;
+  using node_shim = typename traits::node_shim;
   using payload_type = typename traits::payload_type;
 
   class Automaton
@@ -404,9 +394,8 @@ public:
         parent = parent->add( key, m_root);
       }
 
-      node_ptr child = std::make_shared<Payload>( word.back(),
-                                                  m_root,
-                                                  std::forward<PayloadType>(value));
+      auto child = node_shim{ word.back(), std::make_shared<Payload>( m_root,
+                                                                      std::forward<PayloadType>(value))};
 
       parent->add( std::move( child));
     }
@@ -419,9 +408,12 @@ public:
 
     while(!queue.empty())
     {
-      auto node = queue.front();
-      node->visit(detail::compile_visitor<key_type, payload_type>(&queue, node->fail(), m_root));
+      auto shim = queue.front();
       queue.pop_front();
+      auto && node = shim.node;
+
+      node->visit(detail::compile_visitor<key_type, payload_type>(&queue, node->fail(), m_root));
+
     }
   }
 
@@ -436,7 +428,7 @@ private:
   {
   public:
     RootNode():
-      node_type( node_key_type{}, node_ptr{})
+      node_type(node_ptr{})
     {
     }
 
@@ -448,10 +440,9 @@ private:
     public node_type
   {
   public:
-    Payload(node_key_type key,
-            node_ptr fail,
+    Payload(node_ptr fail,
             PayloadType && payload):
-      node_type(std::move(key), std::move(fail)),
+      node_type(std::move(fail)),
       m_payload(std::move(payload))
     {
     }
