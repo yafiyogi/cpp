@@ -18,7 +18,7 @@
   SOFTWARE.
 */
 
-#include "yy_aho-corasick.h"
+#include "yy_aho_corasick.h"
 #include <string>
 #include <iostream>
 
