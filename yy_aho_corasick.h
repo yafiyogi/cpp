@@ -210,11 +210,20 @@ public:
   }
 
 private:
-  static bool comp(const node_shim & shim,
-                   const node_key_type & value)
+  static int comp(const node_shim & shim,
+                  const node_key_type & value)
   {
-    return value < shim.key;
+    if(value < shim.key)
+    {
+      return -1;
+    }
+    else if(value == shim.key)
+    {
+      return 0;
+    }
+    return 1;
   };
+
   node_ptr m_fail;
   std::vector<node_shim> m_children;
 };

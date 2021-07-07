@@ -27,7 +27,6 @@ SOFTWARE.
 #ifndef yy_type_traits_h
 # define yy_type_traits_h
 
-#include <array>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -37,13 +36,6 @@ namespace yafiyogi {
 template<typename T>
 struct yy_is_vector:
     public std::false_type
-{
-};
-
-template<typename T,
-         std::size_t N>
-struct yy_is_vector<std::array<T, N>>:
-    public std::true_type
 {
 };
 

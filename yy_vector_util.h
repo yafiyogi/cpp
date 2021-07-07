@@ -29,12 +29,79 @@ SOFTWARE.
 
 #include <tuple>
 #include <type_traits>
+#include <array>
 #include <vector>
 #include <algorithm>
 
 #include "yy_type_traits.h"
 
 namespace yafiyogi {
+namespace detail {
+
+template<typename V,
+         typename O,
+         typename C>
+class LessThanComp
+{
+public:
+  LessThanComp(C comp):
+    m_comp(std::move(comp))
+  {
+  }
+
+  bool operator()(const O & o,
+                  const V & v) const
+  {
+    return m_comp(o, v) < 0;
+  }
+
+private:
+  C m_comp;
+};
+
+template<typename V,
+         typename O,
+         typename C>
+class EqualToComp
+{
+public:
+  EqualToComp(C comp):
+    m_comp(std::move(comp))
+  {
+  }
+
+  bool operator()(const O & o,
+                  const V & v) const
+  {
+    return 0 == m_comp(o, v);
+  }
+
+private:
+  C m_comp;
+};
+
+} // namespace detail
+
+template<typename T,
+         std::size_t N>
+struct yy_is_vector<std::array<T, N>>:
+    public std::true_type
+{
+};
+
+template<typename T,
+         std::size_t N>
+struct yy_is_container<std::array<T, N>>:
+    std::true_type
+{
+};
+
+template<typename T,
+         std::size_t N>
+struct yy_container_type<std::array<T, N>>
+{
+  using type = typename std::array<T, N>::value_type;
+};
 
 template<typename T>
 struct yy_is_vector<std::vector<T>>:
@@ -48,16 +115,53 @@ struct yy_is_container<std::vector<T>>:
 {
 };
 
+template<typename T>
+struct yy_container_type<std::vector<T>>
+{
+  using type = typename std::vector<T>::value_type;
+};
+
 template<typename T,
          typename V,
          typename C,
          std::enable_if_t<yy_is_vector_v<std::remove_cv_t<std::remove_reference_t<T>>>, bool> = true>
 auto Find(T & container, const V & value, C && comp)
 {
+  using value_type = yy_container_type_t<std::remove_cv_t<std::remove_reference_t<T>>>;
+  using less_than = detail::LessThanComp<V, value_type, C>;
+  using equal_to = detail::EqualToComp<V, value_type, C>;
+
   auto iter = std::lower_bound( container.begin(),
                                 container.end(),
                                 value,
-                                comp);
+                                less_than{comp});
+  bool found = (iter != container.end()) && equal_to{comp}(*iter, value);
+  return std::make_tuple(iter, found);
+}
+
+template<typename T,
+         typename V,
+         std::enable_if_t<yy_is_vector_v<std::remove_cv_t<std::remove_reference_t<T>>>, bool> = true>
+auto Find(T & container, const V & value)
+{
+  using value_type = yy_container_type_t<std::remove_cv_t<std::remove_reference_t<T>>>;
+
+  auto comp = [](const auto & item,
+                 const auto & v) -> int
+  {
+    if(v < item)
+    {
+      return -1;
+    }
+    return 0;
+  };
+
+  using less_than = detail::LessThanComp<V, value_type, decltype(comp)>;
+
+  auto iter = std::lower_bound( container.begin(),
+                                container.end(),
+                                value,
+                                less_than{comp});
   bool found = (iter != container.end()) && (*iter == value);
   return std::make_tuple(iter, found);
 }
