@@ -139,5 +139,47 @@ struct yy_container_type<char[N]>
 template<typename T>
 using yy_container_type_t = typename yy_container_type<T>::type;
 
+template<typename T>
+struct is_smart_ptr:
+    std::false_type
+{
+};
+
+template<typename T>
+struct is_smart_ptr<std::shared_ptr<T>>:
+    std::true_type
+{
+};
+
+template<typename T>
+struct is_smart_ptr<std::unique_ptr<T>>:
+    std::true_type
+{
+};
+
+template<typename T>
+inline constexpr bool yy_is_smart_ptr_v = yy_is_smart_ptr<T>::value;
+
+template<typename T>
+using yy_is_smart_ptr_t = typename yy_is_smart_ptr<T>::type;
+
+template<typename T>
+struct is_optional:
+    std::false_type
+{
+};
+
+template<typename T>
+struct is_optional<std::optional<T>>:
+    std::true_type
+{
+};
+
+template<typename T>
+inline constexpr bool yy_optional_v = yy_optional<T>::value;
+
+template<typename T>
+using yy_optional_t = typename yy_optional<T>::type;
+
 } // namespace yafiyogi
 #endif // yy_type_traits_h
