@@ -1,26 +1,26 @@
 /*
 
-MIT License
+  MIT License
 
-Copyright (c) 2021 Yafiyogi
+  Copyright (c) 2021 Yafiyogi
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 
 */
 
@@ -30,6 +30,7 @@ SOFTWARE.
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <optional>
 
 namespace yafiyogi {
 
@@ -158,10 +159,10 @@ struct is_smart_ptr<std::unique_ptr<T>>:
 };
 
 template<typename T>
-inline constexpr bool yy_is_smart_ptr_v = yy_is_smart_ptr<T>::value;
+inline constexpr bool is_smart_ptr_v = is_smart_ptr<T>::value;
 
 template<typename T>
-using yy_is_smart_ptr_t = typename yy_is_smart_ptr<T>::type;
+using is_smart_ptr_t = typename is_smart_ptr<T>::type;
 
 template<typename T>
 struct is_optional:
@@ -176,10 +177,10 @@ struct is_optional<std::optional<T>>:
 };
 
 template<typename T>
-inline constexpr bool yy_optional_v = yy_optional<T>::value;
+inline constexpr bool is_optional_v = is_optional<T>::value;
 
 template<typename T>
-using yy_optional_t = typename yy_optional<T>::type;
+using is_optional_t = typename is_optional<T>::type;
 
 } // namespace yafiyogi
 #endif // yy_type_traits_h
