@@ -53,7 +53,7 @@ struct yy_func_traits<R(C::*)(Args...)>
     };
 
     template<std::size_t N>
-    using arg_type = arg<N>::type;
+    using arg_type = typename arg<N>::type;
 };
 
 template<typename C, typename R, typename... Args>
@@ -71,7 +71,7 @@ struct yy_func_traits<R(C::*)(Args...) const>
     };
 
     template<std::size_t N>
-    using arg_type = arg<N>::type;
+    using arg_type = typename arg<N>::type;
 };
 
 template<typename C, typename... Args>
@@ -89,7 +89,7 @@ struct yy_func_traits<void(C::*)(Args...)>
     };
 
     template<std::size_t N>
-    using arg_type = arg<N>::type;
+    using arg_type = typename arg<N>::type;
 };
 
 template<typename C, typename... Args>
@@ -107,7 +107,7 @@ struct yy_func_traits<void(C::*)(Args...) const>
     };
 
     template<std::size_t N>
-    using arg_type = arg<N>::type;
+    using arg_type = typename arg<N>::type;
 };
 
 } // namespace yafiyogi
