@@ -27,10 +27,11 @@
 #ifndef yy_type_traits_h
 # define yy_type_traits_h
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <optional>
 
 namespace yafiyogi {
 
